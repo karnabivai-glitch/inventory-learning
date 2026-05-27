@@ -1,4 +1,11 @@
+import { useMemo, useState } from 'react';
+
 export default function InventoryControlLearningPortal() {
+  const [darkMode, setDarkMode] = useState(false);
+  const [search, setSearch] = useState('');
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizDone, setQuizDone] = useState(false);
+
   const glossary = [
     ['ABC Analysis', 'Metode klasifikasi inventory berdasarkan nilai dan frekuensi penggunaan.'],
     ['Backorder', 'Pesanan customer yang tertunda karena stok kosong.'],
@@ -25,6 +32,42 @@ export default function InventoryControlLearningPortal() {
     ['Stockout', 'Kondisi kehabisan stok barang.'],
     ['WMS', 'Warehouse Management System.']
   ];
+
+  const quizQuestions = [
+    {
+      question: 'Apa arti FIFO?',
+      options: [
+        'First In First Out',
+        'Fast Inventory Flow Operation',
+        'Final Input Final Output'
+      ],
+      answer: 'First In First Out'
+    },
+    {
+      question: 'Apa fungsi safety stock?',
+      options: [
+        'Mengurangi stok',
+        'Cadangan untuk mencegah stockout',
+        'Menghapus barang rusak'
+      ],
+      answer: 'Cadangan untuk mencegah stockout'
+    },
+    {
+      question: 'Apa itu stock opname?',
+      options: [
+        'Pengecekan fisik stok',
+        'Pembelian barang',
+        'Pengiriman barang'
+      ],
+      answer: 'Pengecekan fisik stok'
+    }
+  ];
+
+  const filteredGlossary = useMemo(() => {
+    return glossary.filter(([term, desc]) =>
+      `${term} ${desc}`.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search, glossary]);
 
   const modules = [
     {
@@ -120,9 +163,23 @@ export default function InventoryControlLearningPortal() {
     'Warehouse Productivity'
   ];
 
+  const submitQuiz = () => {
+    const answers = document.querySelectorAll('[data-answer]');
+    let score = 0;
+
+    answers.forEach((item) => {
+      if (item.dataset.answer === item.value) {
+        score += 1;
+      }
+    });
+
+    setQuizScore(score);
+    setQuizDone(true);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-800">
-      <header className="bg-slate-900 text-white p-10 shadow-xl">
+    <div className={`${darkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-100 text-slate-800'} min-h-screen transition-all duration-300`}>
+      <header className={`${darkMode ? 'bg-black' : 'bg-slate-900'} text-white p-10 shadow-xl`}>
         <div className="max-w-7xl mx-auto">
           <h1 className="text-5xl font-bold mb-5">
             Inventory Control Academy
@@ -136,6 +193,31 @@ export default function InventoryControlLearningPortal() {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
+        <section className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900 rounded-3xl shadow-lg p-6">
+          <div>
+            <h2 className="text-2xl font-bold">Control Panel</h2>
+            <p className="mt-2 text-slate-500 dark:text-slate-400">
+              Search glossary, toggle dark mode, dan eksplorasi modul inventory.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3 items-center">
+            <input
+              type="text"
+              placeholder="Cari istilah inventory..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="px-4 py-3 rounded-xl border dark:bg-slate-800 dark:border-slate-700"
+            />
+
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="px-5 py-3 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black font-semibold"
+            >
+              {darkMode ? 'Light Mode' : 'Dark Mode'}
+            </button>
+          </div>
+        </section>
         <section className="grid md:grid-cols-4 gap-6">
           <div className="bg-white rounded-3xl shadow-lg p-6">
             <div className="text-4xl font-bold">100+</div>
@@ -254,7 +336,7 @@ export default function InventoryControlLearningPortal() {
           <h2 className="text-3xl font-bold mb-6">Kamus Inventory Control</h2>
 
           <div className="grid md:grid-cols-2 gap-5">
-            {glossary.map(([term, desc]) => (
+            {filteredGlossary.map(([term, desc]) => (
               <div
                 key={term}
                 className="border border-slate-200 rounded-2xl p-5"
@@ -320,6 +402,48 @@ export default function InventoryControlLearningPortal() {
                 <div className="font-semibold text-lg">{item}</div>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="bg-white dark:bg-slate-900 rounded-3xl shadow-lg p-8">
+          <h2 className="text-3xl font-bold mb-6">Quiz Inventory Control</h2>
+
+          <div className="space-y-6">
+            {quizQuestions.map((item, index) => (
+              <div
+                key={item.question}
+                className="border dark:border-slate-700 rounded-2xl p-5"
+              >
+                <h3 className="text-xl font-bold mb-4">
+                  {index + 1}. {item.question}
+                </h3>
+
+                <select
+                  data-answer={item.answer}
+                  className="w-full px-4 py-3 rounded-xl border dark:bg-slate-800 dark:border-slate-700"
+                >
+                  <option>Pilih Jawaban</option>
+                  {item.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+
+            <button
+              onClick={submitQuiz}
+              className="px-6 py-4 rounded-2xl bg-slate-900 text-white font-bold"
+            >
+              Submit Quiz
+            </button>
+
+            {quizDone && (
+              <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-5 text-xl font-bold">
+                Score Anda: {quizScore} / {quizQuestions.length}
+              </div>
+            )}
           </div>
         </section>
 
